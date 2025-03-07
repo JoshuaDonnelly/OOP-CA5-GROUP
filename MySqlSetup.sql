@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXSISTS GuitarEcomerce,
-USE GuitarEcomerce;
+CREATE DATABASE IF NOT EXISTS GuitarEcommerce;
+USE GuitarEcommerce;
 
 -- Dropping Tables if they exsists
 DROP TABLE IF EXISTS order_items;
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
 
---Creating categories
+-- Creating categories
 CREATE TABLE categories (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(80) NOT NULL
@@ -65,6 +65,3 @@ INSERT INTO orders (customer_id, total_price) VALUES
 (1, 1200.99), 
 (2, 300.00);
 
-INSERT INTO order_items (order_id, product_id, quantity, subtotal) VALUES
-(1, 1, 1, 1200.99),
-(2, 3, 1, 300.00);
