@@ -1,7 +1,6 @@
+
 import DTOs.productDTO;
 import DAOs.productDAO;
-
-
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,32 +29,16 @@ public class main {
             scanner.nextLine();
 
             switch (choice) {
-                case 1:
-                    viewAllProducts();
-                    break;
-                case 2:
-                    findProductById();
-                    break;
-                case 3:
-                    deleteProductById();
-                    break;
-                case 4:
-                    insertNewProduct();
-                    break;
-                case 5:
-
-                    break;
-                case 6:
-
-                    break;
-                case 0:
-                    System.out.println("Exiting program...");
-                    break;
-                default:
-                    System.out.println("Invalid choice! Please try again.");
+                case 1 -> viewAllProducts();
+                case 2 -> findProductById();
+                case 3 -> insertNewProduct();
+                case 4 -> updateProduct();
+                case 5 -> deleteProductById();
+                case 6 -> searchProductsByKeyword();
+                case 0 -> System.out.println("Exiting program...");
+                default -> System.out.println("Invalid choice! Please try again.");
             }
         } while (choice != 0);
-
         scanner.close();
     }
 
@@ -74,25 +57,11 @@ public class main {
     private static void findProductById() {
         System.out.print("\nEnter Product ID: ");
         int id = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
 
         productDTO product = productDAO.getProductById(id);
         if (product != null) {
             System.out.println("Product found: " + product);
-        } else {
-            System.out.println("Product not found.");
-        }
-    }
-
-    private static void deleteProductById() {
-        System.out.print("\nEnter Product ID: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
-
-        boolean product = productDAO.deleteProductById(id);
-        if (product) {
-            System.out.println("Product found");
-            System.out.println("Deleting...");
         } else {
             System.out.println("Product not found.");
         }
@@ -121,7 +90,7 @@ public class main {
             scanner.next();
         }
         int categoryId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
 
         System.out.print("Enter Stock Quantity: ");
         while (!scanner.hasNextInt()) {
@@ -138,6 +107,79 @@ public class main {
             System.out.println("Product inserted successfully! Assigned ID: " + insertedProduct.getId());
         } else {
             System.out.println("Failed to insert product.");
+        }
+    }
+
+    private static void updateProduct() {
+        System.out.print("\nEnter Product ID to update: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        productDTO existingProduct = productDAO.getProductById(id);
+        if (existingProduct == null) {
+            System.out.println("Product not found.");
+            return;
+        }
+
+        System.out.println("Updating Product: " + existingProduct);
+
+        System.out.print("Enter New Product Name (leave blank to keep current): ");
+        String name = scanner.nextLine();
+        if (name.isEmpty()) name = existingProduct.getName();
+
+        System.out.print("Enter New Product Price (or -1 to keep current): ");
+        float price = scanner.nextFloat();
+        if (price == -1) price = existingProduct.getPrice();
+        scanner.nextLine();
+
+        System.out.print("Enter New Product Description (leave blank to keep current): ");
+        String description = scanner.nextLine();
+        if (description.isEmpty()) description = existingProduct.getDescription();
+
+        System.out.print("Enter New Category ID (or -1 to keep current): ");
+        int categoryId = scanner.nextInt();
+        if (categoryId == -1) categoryId = existingProduct.getCategoryId();
+        scanner.nextLine();
+
+        System.out.print("Enter New Stock Quantity (or -1 to keep current): ");
+        int stock = scanner.nextInt();
+        if (stock == -1) stock = existingProduct.getStock();
+        scanner.nextLine();
+
+        productDTO updatedProduct = new productDTO(id, name, price, description, categoryId, stock);
+        boolean success = productDAO.updateProduct(id, updatedProduct);
+
+        if (success) {
+            System.out.println("Product updated successfully.");
+        } else {
+            System.out.println("Failed to update product.");
+        }
+    }
+
+    private static void deleteProductById() {
+        System.out.print("\nEnter Product ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        boolean success = productDAO.deleteProductById(id);
+        if (success) {
+            System.out.println("Product deleted successfully.");
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    private static void searchProductsByKeyword() {
+        System.out.print("\nEnter keyword: ");
+        String keyword = scanner.nextLine();
+
+        List<productDTO> results = productDAO.findProductsByKeyword(keyword);
+        if (results.isEmpty()) {
+            System.out.println("No products found.");
+        } else {
+            for (productDTO product : results) {
+                System.out.println(product);
+            }
         }
     }
 }
