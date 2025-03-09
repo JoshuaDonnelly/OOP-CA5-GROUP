@@ -1,5 +1,4 @@
 package DAOs;
-
 import DTOs.productDTO;
 import Database.DatabaseConnection;
 
