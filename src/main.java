@@ -1,5 +1,3 @@
-
-
 import DTOs.productDTO;
 import DAOs.productDAO;
 
@@ -39,10 +37,10 @@ public class main {
                     findProductById();
                     break;
                 case 3:
-
+                    deleteProductById();
                     break;
                 case 4:
-
+                    insertNewProduct();
                     break;
                 case 5:
 
@@ -83,6 +81,63 @@ public class main {
             System.out.println("Product found: " + product);
         } else {
             System.out.println("Product not found.");
+        }
+    }
+
+    private static void deleteProductById() {
+        System.out.print("\nEnter Product ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        boolean product = productDAO.deleteProductById(id);
+        if (product) {
+            System.out.println("Product found");
+            System.out.println("Deleting...");
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    private static void insertNewProduct() {
+        System.out.println("\n--- Insert New Product ---");
+
+        System.out.print("Enter Product Name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter Product Price: ");
+        while (!scanner.hasNextFloat()) {
+            System.out.print("Invalid input! Enter a valid price: ");
+            scanner.next();
+        }
+        float price = scanner.nextFloat();
+        scanner.nextLine();
+
+        System.out.print("Enter Product Description: ");
+        String description = scanner.nextLine();
+
+        System.out.print("Enter Category ID: ");
+        while (!scanner.hasNextInt()) {
+            System.out.print("Invalid input! Enter a valid category ID: ");
+            scanner.next();
+        }
+        int categoryId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        System.out.print("Enter Stock Quantity: ");
+        while (!scanner.hasNextInt()) {
+            System.out.print("Invalid input! Enter a valid stock quantity: ");
+            scanner.next();
+        }
+        int stock = scanner.nextInt();
+        scanner.nextLine();
+
+        productDTO newProduct = new productDTO(0, name, price, description, categoryId, stock);
+        productDTO insertedProduct = productDAO.insertProduct(newProduct);
+
+        if (insertedProduct != null) {
+            System.out.println("Product inserted successfully! Assigned ID: " + insertedProduct.getId());
+        } else {
+            System.out.println("Failed to insert product.");
         }
     }
 }
