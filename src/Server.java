@@ -1,11 +1,16 @@
-import DAOs.productDAO;
+import DAOs.productDAOInterface;
+import DTOs.productDTO;
+import Database.DatabaseConnection;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.LocalTime;
 
 public class Server {
     final int SERVER_PORT_NUMBER = 49000;
@@ -24,7 +29,7 @@ public class Server {
             serverSocket = new ServerSocket(SERVER_PORT_NUMBER);
             System.out.println("Server has started.");
 
-            int clientNumber = 0;  // a number sequentially allocated to each new client (for identification purposes here)
+            int clientNumber = 0;
 
             while (true) {
                 System.out.println("Server: Listening/waiting for connections on port ..." + SERVER_PORT_NUMBER);
@@ -66,7 +71,7 @@ public class Server {
     }
 }
 
-class ClientHandler implements Runnable   // each ClientHandler communicates with one Client
+class ClientHandler implements Runnable
 {
     BufferedReader socketReader;
     PrintWriter socketWriter;
@@ -86,10 +91,6 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
         }
     }
 
-    /**
-     * run() method is called by the Thread it is assigned to.
-     * This code runs independently of all other threads.
-     */
     @Override
     public void run() {
         String request;
@@ -97,46 +98,18 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
             while ((request = socketReader.readLine()) != null) {
                 System.out.println("Server: (ClientHandler): Read command from client " + clientNumber + ": " + request);
 
-                // Implement our PROTOCOL
-                // The protocol is the logic that determines the responses given based on requests received.
-                //
-                if (request.startsWith("time"))  // so, client wants the time !
-                {
-                    LocalTime time = LocalTime.now();  // get the time
-                    socketWriter.println(time);  // send the time to client (as a string of characters)
-                    System.out.println("Server message: time sent to client.");
-                } else if (request.startsWith("echo")) {
-                    String message = request.substring(5); // strip off the leading substring "echo "
-                    socketWriter.println(message);   // send the received message back to the client
-                    System.out.println("Server message: echo message sent to client.");
-                } else if (request.startsWith("quit"))
+                if (request.startsWith("exit"))
                 {
                     socketWriter.println("Sorry to see you leaving. Goodbye.");
                     System.out.println("Server message: Client has notified us that it is quitting.");
                 }
-                else if (request.startsWith("triple")){
-                    String triple = request.substring(7);
+                else if(request.startsWith("view")){
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getAllProducts());
+                }
+                else if(request.startsWith("find")){
+                    String triple = request.substring(5);
                     socketWriter.println(Integer.parseInt(triple)*3);
-                }else if (request.startsWith("add")){
-                    String add = request.substring(4);
-                    int x = Integer.parseInt(add.charAt(0)+"");
-                    int y = Integer.parseInt(add.charAt(2)+"");;
-                    socketWriter.println(x + y);
-                }else if (request.startsWith("mult")){
-                    String mult = request.substring(5);
-                    int x = Integer.parseInt(mult.charAt(0)+"");
-                    int y = Integer.parseInt(mult.charAt(2)+"");
-                    socketWriter.println(x * y);
-                }else if (request.startsWith("sub")){
-                    String sub = request.substring(4);
-                    int x = Integer.parseInt(sub.charAt(0)+"");
-                    int y = Integer.parseInt(sub.charAt(2)+"");
-                    socketWriter.println(x - y);
-                }else if (request.startsWith("div")){
-                    String div = request.substring(4);
-                    int x = Integer.parseInt(div.charAt(0)+"");
-                    int y = Integer.parseInt(div.charAt(0)+"");
-                    socketWriter.println(x / y);
                 }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
@@ -155,5 +128,95 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
             }
         }
         System.out.println("Server: (ClientHandler): Handler for Client " + clientNumber + " is terminating .....");
+    }
+}
+
+class productDAO implements productDAOInterface {
+    private Connection conn;
+
+    public productDAO() {
+        conn = DatabaseConnection.getConnection();
+    }
+
+    @Override
+    public List<productDTO> getAllProducts() {
+        List<productDTO> products = new ArrayList<>();
+        String sql = "SELECT * FROM products";
+
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                products.add(new productDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getFloat("price"),
+                        rs.getString("description"),
+                        rs.getInt("category_id"),
+                        rs.getInt("stock")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    @Override
+    public productDTO getProductById(int id) {
+        String sql = "SELECT * FROM products WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return new productDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getFloat("price"),
+                        rs.getString("description"),
+                        rs.getInt("category_id"),
+                        rs.getInt("stock")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean deleteProductById(int id) {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public productDTO insertProduct(productDTO p) {
+        String sql = "INSERT INTO products (name, price, description, category_id, stock) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, p.getName());
+            pstmt.setFloat(2, p.getPrice());
+            pstmt.setString(3, p.getDescription());
+            pstmt.setInt(4, p.getCategoryId());
+            pstmt.setInt(5, p.getStock());
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    p.setId(generatedKeys.getInt(1));
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
