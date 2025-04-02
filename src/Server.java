@@ -108,8 +108,29 @@ class ClientHandler implements Runnable
                     socketWriter.println(dao.getAllProducts());
                 }
                 else if(request.startsWith("find")){
-                    String triple = request.substring(5);
-                    socketWriter.println(Integer.parseInt(triple)*3);
+                    String id = request.substring(5);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getProductById(Integer.parseInt(id)));
+                }
+                else if(request.startsWith("insert")){
+                    String product = request.substring(7);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.insertProduct(product));
+                }
+                else if(request.startsWith("update")){
+                    String product = request.substring(7);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.updateProduct(product));
+                }
+                else if(request.startsWith("delete")){
+                    String id = request.substring(7);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.deleteProductById(Integer.parseInt(id)));
+                }
+                else if(request.startsWith("search")){
+                    String keyword = request.substring(7);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.searchProductsByKeyword(keyword));
                 }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
@@ -197,26 +218,117 @@ class productDAO implements productDAOInterface {
     }
 
     @Override
-    public productDTO insertProduct(productDTO p) {
-        String sql = "INSERT INTO products (name, price, description, category_id, stock) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, p.getName());
-            pstmt.setFloat(2, p.getPrice());
-            pstmt.setString(3, p.getDescription());
-            pstmt.setInt(4, p.getCategoryId());
-            pstmt.setInt(5, p.getStock());
+    public productDTO insertProduct(String pString) {
+        String[] pSplit = pString.split(" ", 5); // Splitting input string into max 5 parts
 
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                ResultSet generatedKeys = pstmt.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    p.setId(generatedKeys.getInt(1));
-                    return p;
+        if (pSplit.length < 5) {
+            System.out.println("Invalid input format. Expected: name price description categoryId stock");
+            return null;
+        }
+
+        try {
+            String name = pSplit[0];
+            float price = Float.parseFloat(pSplit[1]);
+            String description = pSplit[2];
+            int categoryId = Integer.parseInt(pSplit[3]);
+            int stock = Integer.parseInt(pSplit[4]);
+
+            productDTO p = new productDTO(0, name, price, description, categoryId, stock);
+
+            String sql = "INSERT INTO products (name, price, description, category_id, stock) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, p.getName());
+                pstmt.setFloat(2, p.getPrice());
+                pstmt.setString(3, p.getDescription());
+                pstmt.setInt(4, p.getCategoryId());
+                pstmt.setInt(5, p.getStock());
+
+                int affectedRows = pstmt.executeUpdate();
+                if (affectedRows > 0) {
+                    ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        p.setId(generatedKeys.getInt(1));
+                        return p;
+                    }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Price, categoryId, and stock must be valid numbers.");
         }
         return null;
+    }
+
+    @Override
+    public boolean updateProduct(String pString) {
+        String[] pSplit = pString.split(" ", 6); // Splitting input string into max 6 parts
+
+        if (pSplit.length < 6) {
+            System.out.println("Invalid input format. Expected: id name price description categoryId stock");
+            return false;
+        }
+
+        try {
+            int id = Integer.parseInt(pSplit[0]);
+            String name = pSplit[1];
+            float price = Float.parseFloat(pSplit[2]);
+            String description = pSplit[3];
+            int categoryId = Integer.parseInt(pSplit[4]);
+            int stock = Integer.parseInt(pSplit[5]);
+
+            String sql = "UPDATE products SET name = ?, price = ?, description = ?, category_id = ?, stock = ? WHERE id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                pstmt.setFloat(2, price);
+                pstmt.setString(3, description);
+                pstmt.setInt(4, categoryId);
+                pstmt.setInt(5, stock);
+                pstmt.setInt(6, id);
+
+                int affectedRows = pstmt.executeUpdate();
+                return affectedRows > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            System.out.println("Error: ID, Price, categoryId, and stock must be valid numbers.");
+        }
+        return false;
+    }
+
+    @Override
+    public List<productDTO> searchProductsByKeyword(String keyword) {
+        List<productDTO> results = new ArrayList<>();
+        String sql = "SELECT * FROM products WHERE name LIKE ? OR description LIKE ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + keyword + "%");
+            pstmt.setString(2, "%" + keyword + "%");
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                productDTO product = new productDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getFloat("price"),
+                        rs.getString("description"),
+                        rs.getInt("category_id"),
+                        rs.getInt("stock")
+                );
+                results.add(product);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        if (results.isEmpty()) {
+            System.out.println("No products found.");
+        } else {
+            for (productDTO product : results) {
+                System.out.println(product);
+            }
+        }
+        return results;
     }
 }

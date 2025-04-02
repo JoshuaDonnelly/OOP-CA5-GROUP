@@ -6,5 +6,7 @@ public interface productDAOInterface {
     List<productDTO> getAllProducts();
     productDTO getProductById(int id);
     boolean deleteProductById(int id);
-    productDTO insertProduct(productDTO p);
+    productDTO insertProduct(String p);
+    boolean updateProduct(String p);
+    List<productDTO> searchProductsByKeyword(String keyword);
 }
