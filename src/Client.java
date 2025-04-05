@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.List;
 import java.util.Scanner;
 
 public class Client {
@@ -57,23 +56,23 @@ public class Client {
                     System.out.println("Client message: Response from server: \"" + response + "\"");
                     break;  // break out of while loop, client will exit.
                 } else if (userRequest.startsWith("view")) {
-                    String tripleString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + tripleString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else if (userRequest.startsWith("find")) {
-                    String addString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + addString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else if (userRequest.startsWith("insert")) {
-                    String multString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + multString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else if (userRequest.startsWith("update")) {
-                    String subString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + subString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else if (userRequest.startsWith("delete")) {
-                    String divString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + divString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else if (userRequest.startsWith("search")) {
-                    String divString = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + divString + "\"");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
                 } else {
                     System.out.println("Command unknown. Try again.");
                 }
