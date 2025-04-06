@@ -112,13 +112,12 @@ class ClientHandler implements Runnable
                 else if(request.startsWith("find")){
                     String id = request.substring(5);
                     productDAO dao = new productDAO();
-                    socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
+                    socketWriter.println(dao.getProductById(Integer.parseInt(id)));
                 }
                 else if(request.startsWith("insert")){
                     String product = request.substring(7);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.insertProduct(product));
-
                 }
                 else if(request.startsWith("update")){
                     String product = request.substring(7);
@@ -135,14 +134,19 @@ class ClientHandler implements Runnable
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.searchProductsByKeyword(keyword));
                 }
-                else if (request.startsWith("find")) {
-                    String id = request.substring(5);
+                else if(request.startsWith("view json")){
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getAllProductsJson());
+                }
+                else if(request.startsWith("find json")){
+                    String id = request.substring(10);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
-                else if(request.equals("GET_ALL_ENTITIES")){
+                else if(request.startsWith("search json")){
+                    String keyword = request.substring(12);
                     productDAO dao = new productDAO();
-                    socketWriter.println(dao.getAllProductsJson());
+                    socketWriter.println(dao.getProductsJsonByKeyword(keyword));
                 }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
@@ -196,13 +200,6 @@ class productDAO implements productDAOInterface {
         return products;
     }
 
-    @Override
-    public String getAllProductsJson() {
-        List<productDTO> products = getAllProducts();
-        JSONArray jsonArray = new JSONArray(products);
-        return jsonArray.toString();
-    }
-
 
     // Get by ID //
 
@@ -229,12 +226,6 @@ class productDAO implements productDAOInterface {
         return null;
     }
 
-    @Override
-    public String getProductJsonById(int id) {
-        productDTO product = getProductById(id);
-        return product != null ? new JSONObject(product).toString() : "{}";
-    }
-
 
     // Delete by ID //
 
@@ -251,6 +242,10 @@ class productDAO implements productDAOInterface {
         }
         return false;
     }
+
+
+    // Insert Product //
+
 
     @Override
     public productDTO insertProduct(String pString) {
@@ -286,8 +281,6 @@ class productDAO implements productDAOInterface {
                         return p;
                     }
                 }
-
-
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -296,6 +289,10 @@ class productDAO implements productDAOInterface {
         }
         return null;
     }
+
+
+    // Update Product //
+
 
     @Override
     public boolean updateProduct(String pString) {
@@ -371,19 +368,27 @@ class productDAO implements productDAOInterface {
         return results;
     }
 
+
+    // Jsons //
+
+
+    @Override
+    public String getAllProductsJson() {
+        List<productDTO> products = getAllProducts();
+        JSONArray jsonArray = new JSONArray(products);
+        return jsonArray.toString();
+    }
+
+    @Override
+    public String getProductJsonById(int id) {
+        productDTO product = getProductById(id);
+        return product != null ? new JSONObject(product).toString() : "{}";
+    }
+
     @Override
     public String getProductsJsonByKeyword(String keyword) {
         List<productDTO> products = searchProductsByKeyword(keyword);
         JSONArray jsonArray = new JSONArray(products);
         return jsonArray.toString();
-    }
-    private void displayProduct(productDTO product) {
-        System.out.println("Product Details:");
-        System.out.println("ID: " + product.getId());
-        System.out.println("Name: " + product.getName());
-        System.out.println("Price: " + product.getPrice());
-        System.out.println("Description: " + product.getDescription());
-        System.out.println("Category ID: " + product.getCategoryId());
-        System.out.println("Stock: " + product.getStock());
     }
 }
