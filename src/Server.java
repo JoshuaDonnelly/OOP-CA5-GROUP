@@ -143,6 +143,11 @@ class ClientHandler implements Runnable
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
+                else if(request.equals("GET_ALL_ENTITIES")){
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getAllProductsJson());
+
+                }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
                     System.out.println("Server message: Invalid request from client.");
@@ -195,8 +200,12 @@ class productDAO implements productDAOInterface {
         return products;
     }
 
-
-    // Get by ID //
+    @Override
+    public String getAllProductsJson() {
+        List<productDTO> products = getAllProducts();
+        JSONArray jsonArray = new JSONArray(products);
+        return jsonArray.toString();
+    }
 
 
     @Override
@@ -221,8 +230,11 @@ class productDAO implements productDAOInterface {
         return null;
     }
 
-
-    // Delete by ID //
+    @Override
+    public String getProductJsonById(int id) {
+        productDTO product = getProductById(id);
+        return product != null ? new JSONObject(product).toString() : "{}";
+    }
 
 
     @Override
@@ -237,10 +249,6 @@ class productDAO implements productDAOInterface {
         }
         return false;
     }
-
-
-    // Insert Product //
-
 
     @Override
     public productDTO insertProduct(String pString) {
@@ -276,6 +284,8 @@ class productDAO implements productDAOInterface {
                         return p;
                     }
                 }
+
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -284,10 +294,6 @@ class productDAO implements productDAOInterface {
         }
         return null;
     }
-
-
-    // Update Product //
-
 
     @Override
     public boolean updateProduct(String pString) {
@@ -326,9 +332,7 @@ class productDAO implements productDAOInterface {
         return false;
     }
 
-
     // Search by Keyword //
-
 
     @Override
     public List<productDTO> searchProductsByKeyword(String keyword) {
@@ -365,27 +369,20 @@ class productDAO implements productDAOInterface {
         return results;
     }
 
-
-    // Jsons //
-
-
-    @Override
-    public String getAllProductsJson() {
-        List<productDTO> products = getAllProducts();
-        JSONArray jsonArray = new JSONArray(products);
-        return jsonArray.toString();
-    }
-
-    @Override
-    public String getProductJsonById(int id) {
-        productDTO product = getProductById(id);
-        return product != null ? new JSONObject(product).toString() : "{}";
-    }
-
     @Override
     public String getProductsJsonByKeyword(String keyword) {
         List<productDTO> products = searchProductsByKeyword(keyword);
         JSONArray jsonArray = new JSONArray(products);
         return jsonArray.toString();
     }
+    private void displayProduct(productDTO product) {
+        System.out.println("Product Details:");
+        System.out.println("ID: " + product.getId());
+        System.out.println("Name: " + product.getName());
+        System.out.println("Price: " + product.getPrice());
+        System.out.println("Description: " + product.getDescription());
+        System.out.println("Category ID: " + product.getCategoryId());
+        System.out.println("Stock: " + product.getStock());
+    }
+
 }
