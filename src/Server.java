@@ -143,11 +143,6 @@ class ClientHandler implements Runnable
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
-                else if(request.startsWith("search json")){
-                    String keyword = request.substring(12);
-                    productDAO dao = new productDAO();
-                    socketWriter.println(dao.getProductsJsonByKeyword(keyword));
-                }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
                     System.out.println("Server message: Invalid request from client.");
@@ -331,7 +326,9 @@ class productDAO implements productDAOInterface {
         return false;
     }
 
+
     // Search by Keyword //
+
 
     @Override
     public List<productDTO> searchProductsByKeyword(String keyword) {
