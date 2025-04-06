@@ -1,11 +1,15 @@
 import DTOs.productDTO;
 import Utils.JsonConnector;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client {
@@ -35,6 +39,7 @@ public class Client {
                 System.out.println("5. Delete Product               <delete id>");
                 System.out.println("6. Search Products by Keyword   <search keyword>");
                 System.out.println("9. Display Product by ID        <display id>");
+                System.out.println("10. Display All Entities        <entities>");
                 System.out.println("0. Exit                         <exit>");
                 System.out.print("Enter your choice or command: ");
                 String userRequest = scanner.nextLine().trim();
@@ -64,6 +69,10 @@ public class Client {
                     // Manual command: "display <id>" (like before)
                 } else if (userRequest.toLowerCase().startsWith("display ")) {
                     handleDisplayProductById(userRequest, socketWriter, socketReader);
+
+                    // Option 7: Display All Entities
+                } else if (userRequest.equals("7") || userRequest.equalsIgnoreCase("entities")) {
+                    displayAllEntities(socketWriter, socketReader);
 
                     // All other commands (view, find, insert, update, delete, search)
                 } else if (isRecognizedCommand(userRequest)) {
@@ -117,6 +126,56 @@ public class Client {
         System.out.println("===========================\n");
     }
 
+    private void displayAllEntities(PrintWriter socketWriter, BufferedReader socketReader) throws IOException {
+        System.out.println("\n===== Display All Entities =====");
+        socketWriter.println("GET_ALL_ENTITIES");
+        String response = socketReader.readLine();
+
+        try {
+            JSONArray jsonArray = new JSONArray(response);
+            List<productDTO> products = new ArrayList<>();
+
+            // Convert JSON array to List of products
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                productDTO product = new productDTO();
+                product.setId(jsonObject.getInt("id"));
+                product.setName(jsonObject.getString("name"));
+                product.setPrice((float) jsonObject.getDouble("price"));
+                product.setDescription(jsonObject.getString("description"));
+                product.setCategoryId(jsonObject.getInt("categoryId"));
+                product.setStock(jsonObject.getInt("stock"));
+                products.add(product);
+            }
+
+            // Display formatted list of products
+            System.out.println("\n===== All Products =====");
+            System.out.printf("%-5s %-20s %-10s %-30s %-12s %-8s\n",
+                    "ID", "Name", "Price", "Description", "Category ID", "Stock");
+            System.out.println("--------------------------------------------------------------------------------");
+
+            for (productDTO product : products) {
+                System.out.printf("%-5d %-20s $%-9.2f %-30s %-12d %-8d\n",
+                        product.getId(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        product.getCategoryId(),
+                        product.getStock()
+                );
+            }
+
+            if (products.isEmpty()) {
+                System.out.println("No products found in the database.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error parsing response: " + response);
+            System.out.println("Error details: " + e.getMessage());
+        }
+    }
+
+
     private boolean isRecognizedCommand(String command) {
         return command.startsWith("view") ||
                 command.startsWith("find") ||
@@ -124,6 +183,7 @@ public class Client {
                 command.startsWith("update") ||
                 command.startsWith("delete") ||
                 command.startsWith("display") ||
+                command.equals("entities") ||
                 command.startsWith("search");
     }
 }

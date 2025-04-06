@@ -140,6 +140,10 @@ class ClientHandler implements Runnable
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
+                else if(request.equals("GET_ALL_ENTITIES")){
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getAllProductsJson());
+                }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
                     System.out.println("Server message: Invalid request from client.");

@@ -16,4 +16,5 @@ public interface productDAOInterface {
     String getProductJsonById(int id);
     String getAllProductsJson();
     String getProductsJsonByKeyword(String keyword);
+
 }
