@@ -7,11 +7,12 @@ public interface productDAOInterface {
     List<productDTO> getAllProducts();
     productDTO getProductById(int id);
     boolean deleteProductById(int id);
-    productDTO insertProduct(productDTO p);
+    productDTO insertProduct(String p);
+    boolean updateProduct(String p);
+    List<productDTO> searchProductsByKeyword(String keyword);
 
-    // **NEW: Update an existing product by ID**
-    boolean updateProduct(int id, productDTO updatedProduct);
-
-    // **NEW: Find products by keyword (search by name or description)**
-    List<productDTO> findProductsByKeyword(String keyword);
+    // New JSON methods
+    String getProductJsonById(int id);
+    String getAllProductsJson();
+    String getProductsJsonByKeyword(String keyword);
 }
