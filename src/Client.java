@@ -1,4 +1,5 @@
 import DTOs.productDTO;
+import Utils.JsonConnector;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,73 +12,21 @@ public class Client {
 
     final static int SERVER_PORT_NUMBER = 49000;
     private static final Scanner scanner = new Scanner(System.in);
-    private static final productDAO productDAO = new productDAO();
 
     public static void main(String[] args) {
         Client client = new Client();
         client.start();
     }
 
-    public static void start() {
+    public void start() {
 
-        try (   // Attempt to establish a connection with the server and, if successful,
-                // create a Socket for communication.
-                Socket socket = new Socket("localhost", SERVER_PORT_NUMBER);
+        try (Socket socket = new Socket("localhost", SERVER_PORT_NUMBER);
+             PrintWriter socketWriter = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-                // get the socket's input and output streams, and wrap them in writer and readers
-                PrintWriter socketWriter = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                ) {
             System.out.println("Client message: The Client is running and has connected to the server");
-            // ask user to enter a command
-            Scanner userInput = new Scanner(System.in);
-            System.out.println("\n===== Guitar E-Commerce System =====");
-            System.out.println("1. View All Products");
-            System.out.println("2. Find Product by ID");
-            System.out.println("3. Insert New Product");
-            System.out.println("4. Update Product");
-            System.out.println("5. Delete Product");
-            System.out.println("6. Search Products by Keyword");
-            System.out.println("0. Exit");
-            System.out.print("Enter your choice: ");
-            System.out.print("Please enter a command: ");
-            String userRequest = userInput.nextLine();
 
-            while(true) {
-                // send the command to the server on the socket
-                socketWriter.println(userRequest);    // write the user's request to socket along with a newline terminator (which is required) (it is included by println() )
-                // out.flush();                      // flushing buffer NOT necessary as auto flush is set to true
-
-                // based on the request sent, process the answer returned by the server
-                //
-                if (userRequest.startsWith("exit")) // if the user has entered the "quit" command
-                {
-                    String response = socketReader.readLine();   // wait for response -
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                    break;  // break out of while loop, client will exit.
-                } else if (userRequest.startsWith("view")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else if (userRequest.startsWith("find")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else if (userRequest.startsWith("insert")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else if (userRequest.startsWith("update")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else if (userRequest.startsWith("delete")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else if (userRequest.startsWith("search")) {
-                    String response = socketReader.readLine();
-                    System.out.println("Client message: Response from server: \"" + response + "\"");
-                } else {
-                    System.out.println("Command unknown. Try again.");
-                }
-
-                userInput = new Scanner(System.in);
+            while (true) {
                 System.out.println("\n===== Guitar E-Commerce System =====");
                 System.out.println("1. View All Products            <view>");
                 System.out.println("2. Find Product by ID           <find id>");
@@ -85,19 +34,96 @@ public class Client {
                 System.out.println("4. Update Product               <update id name price description category_id stock>");
                 System.out.println("5. Delete Product               <delete id>");
                 System.out.println("6. Search Products by Keyword   <search keyword>");
-                System.out.println("0. Exit");
-                System.out.print("Enter your choice: ");
-                System.out.print("Please enter a command: ");
-                userRequest = userInput.nextLine();
+                System.out.println("9. Display Product by ID        <display id>");
+                System.out.println("0. Exit                         <exit>");
+                System.out.print("Enter your choice or command: ");
+                String userRequest = scanner.nextLine().trim();
+
+                // Option 0: Exit
+                if (userRequest.equals("0") || userRequest.equalsIgnoreCase("exit")) {
+                    socketWriter.println("exit");
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
+                    break;
+
+                    // Option 9: Display Product by ID (pretty JSON-based)
+                } else if (userRequest.equals("9")) {
+                    System.out.print("Enter product ID: ");
+                    String id = scanner.nextLine().trim();
+                    socketWriter.println("find " + id);
+                    String response = socketReader.readLine();
+
+                    if (response == null || response.isEmpty() || response.equalsIgnoreCase("null")) {
+                        System.out.println("No product found with ID: " + id);
+                    } else {
+                        productDTO product = JsonConnector.jsonToProduct(response);
+                        System.out.println("Raw JSON response from server: " + response);
+                        displayProduct(product);
+                    }
+
+                    // Manual command: "display <id>" (like before)
+                } else if (userRequest.toLowerCase().startsWith("display ")) {
+                    handleDisplayProductById(userRequest, socketWriter, socketReader);
+
+                    // All other commands (view, find, insert, update, delete, search)
+                } else if (isRecognizedCommand(userRequest)) {
+                    socketWriter.println(userRequest);
+                    String response = socketReader.readLine();
+                    System.out.println("Client message: Response from server: \"" + response + "\"");
+
+
+                } else {
+                    System.out.println("Unrecognized command. Please try again.");
+                }
             }
 
+        } catch (IOException e) {
+            System.out.println("Client message: IOException: " + e.getMessage());
         }
-        catch (IOException e) {
-            System.out.println("Client message: IOException: " + e);
-        }
-        // sockets and streams are closed automatically due to try-with-resources
-        // so no finally block is required here.
 
         System.out.println("Exiting client, but server may still be running.");
+    }
+
+    private void handleDisplayProductById(String userRequest, PrintWriter socketWriter, BufferedReader socketReader) throws IOException {
+        String[] parts = userRequest.split(" ");
+        if (parts.length == 2) {
+            String id = parts[1];
+            socketWriter.println("find " + id);
+            String response = socketReader.readLine();
+            if (response == null || response.isEmpty() || response.equalsIgnoreCase("null")) {
+                System.out.println("No product found with ID: " + id);
+                return;
+            }
+            productDTO product = JsonConnector.jsonToProduct(response);
+            System.out.println("Raw JSON response from server: " + response);
+            displayProduct(product);
+        } else {
+            System.out.println("Invalid command format. Use: display <ID>");
+        }
+    }
+
+    private void displayProduct(productDTO product) {
+        if (product == null) {
+            System.out.println("Unable to display product. Data was null or invalid.");
+            return;
+        }
+        System.out.println("\n===== Product Details =====");
+        System.out.println("ID: " + product.getId());
+        System.out.println("Name: " + product.getName());
+        System.out.println("Price: " + product.getPrice());
+        System.out.println("Description: " + product.getDescription());
+        System.out.println("Category ID: " + product.getCategoryId());
+        System.out.println("Stock: " + product.getStock());
+        System.out.println("===========================\n");
+    }
+
+    private boolean isRecognizedCommand(String command) {
+        return command.startsWith("view") ||
+                command.startsWith("find") ||
+                command.startsWith("insert") ||
+                command.startsWith("update") ||
+                command.startsWith("delete") ||
+                command.startsWith("display") ||
+                command.startsWith("search");
     }
 }

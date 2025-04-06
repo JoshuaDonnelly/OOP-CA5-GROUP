@@ -11,6 +11,7 @@ public interface productDAOInterface {
     boolean updateProduct(String p);
     List<productDTO> searchProductsByKeyword(String keyword);
 
+
     // New JSON methods
     String getProductJsonById(int id);
     String getAllProductsJson();

@@ -118,6 +118,7 @@ class ClientHandler implements Runnable
                     String product = request.substring(7);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.insertProduct(product));
+
                 }
                 else if(request.startsWith("update")){
                     String product = request.substring(7);
@@ -133,6 +134,11 @@ class ClientHandler implements Runnable
                     String keyword = request.substring(7);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.searchProductsByKeyword(keyword));
+                }
+                else if (request.startsWith("find")) {
+                    String id = request.substring(5);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
                 else{
                     socketWriter.println("error I'm sorry I don't understand your request");
@@ -276,6 +282,8 @@ class productDAO implements productDAOInterface {
                         return p;
                     }
                 }
+
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -364,5 +372,14 @@ class productDAO implements productDAOInterface {
         List<productDTO> products = searchProductsByKeyword(keyword);
         JSONArray jsonArray = new JSONArray(products);
         return jsonArray.toString();
+    }
+    private void displayProduct(productDTO product) {
+        System.out.println("Product Details:");
+        System.out.println("ID: " + product.getId());
+        System.out.println("Name: " + product.getName());
+        System.out.println("Price: " + product.getPrice());
+        System.out.println("Description: " + product.getDescription());
+        System.out.println("Category ID: " + product.getCategoryId());
+        System.out.println("Stock: " + product.getStock());
     }
 }

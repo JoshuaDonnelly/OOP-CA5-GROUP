@@ -34,4 +34,15 @@ public class JsonConnector {
 
         return jsonArray.toString(4); // 4 spaces for pretty-print
     }
+    public static productDTO jsonToProduct(String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        productDTO product = new productDTO();
+        product.setId(jsonObject.getInt("id"));
+        product.setName(jsonObject.getString("name"));
+        product.setPrice((float) jsonObject.getDouble("price"));
+        product.setDescription(jsonObject.getString("description"));
+        product.setCategoryId(jsonObject.getInt("categoryId"));
+        product.setStock(jsonObject.getInt("stock"));
+        return product;
+    }
 }
