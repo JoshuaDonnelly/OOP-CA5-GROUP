@@ -105,6 +105,15 @@ class ClientHandler implements Runnable
                     socketWriter.println("Sorry to see you leaving. Goodbye.");
                     System.out.println("Server message: Client has notified us that it is quitting.");
                 }
+                else if(request.startsWith("view json")){
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getAllProductsJson());
+                }
+                else if(request.startsWith("find json")){
+                    String id = request.substring(10);
+                    productDAO dao = new productDAO();
+                    socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
+                }
                 else if(request.startsWith("view")){
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getAllProducts());
@@ -133,15 +142,6 @@ class ClientHandler implements Runnable
                     String keyword = request.substring(7);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.searchProductsByKeyword(keyword));
-                }
-                else if(request.startsWith("view json")){
-                    productDAO dao = new productDAO();
-                    socketWriter.println(dao.getAllProductsJson());
-                }
-                else if(request.startsWith("find json")){
-                    String id = request.substring(10);
-                    productDAO dao = new productDAO();
-                    socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
                 }
                 else if(request.equals("GET_ALL_ENTITIES")){
                     productDAO dao = new productDAO();
