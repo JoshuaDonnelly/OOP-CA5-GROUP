@@ -3,6 +3,8 @@ package Utils;
 import DTOs.productDTO;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class JsonConnector {
@@ -44,5 +46,25 @@ public class JsonConnector {
         product.setCategoryId(jsonObject.getInt("categoryId"));
         product.setStock(jsonObject.getInt("stock"));
         return product;
+    }
+    public static List<productDTO> jsonToProductList(String json) {
+        List<productDTO> products = new ArrayList<>();
+        try {
+            JSONArray jsonArray = new JSONArray(json);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                productDTO product = new productDTO();
+                product.setId(jsonObject.getInt("id"));
+                product.setName(jsonObject.getString("name"));
+                product.setPrice((float) jsonObject.getDouble("price"));
+                product.setDescription(jsonObject.getString("description"));
+                product.setCategoryId(jsonObject.getInt("categoryId"));
+                product.setStock(jsonObject.getInt("stock"));
+                products.add(product);
+            }
+        } catch (Exception e) {
+            System.out.println("Error parsing JSON array: " + e.getMessage());
+        }
+        return products;
     }
 }
