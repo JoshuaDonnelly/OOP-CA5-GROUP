@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane prefHeight="700" prefWidth="900" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.oopca5jfx.Networking.ClientController">
+
+    <Button fx:id="connectButton" layoutX="51.0" layoutY="50.0" onAction="#connectToServer" prefHeight="25.0" prefWidth="119.0" text="Connect to Server" />
+    <Button fx:id="viewProductsButton" layoutX="51.0" layoutY="98.0" onAction="#viewProducts" prefHeight="25.0" prefWidth="111.0" text="View All Products" />
+    <Button fx:id="exitButton" layoutX="815.0" layoutY="14.0" onAction="#exitClient" text="Exit" />
+
+    <!-- Find by id !-->
+    <TextField fx:id="productIdToFind" layoutX="130.0" layoutY="143.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
+    <Button fx:id="findProductButton" layoutX="23.0" layoutY="143.0" onAction="#findProductById" prefHeight="25.0" prefWidth="111.0" text="Find Product" />
+
+    <!--Insert or update a product !-->
+    <TextArea fx:id="outputArea" editable="false" layoutX="200" layoutY="50" prefHeight="165.0" prefWidth="650" />
+   <TextField fx:id="nameField" layoutX="200.0" layoutY="234.0" prefHeight="25.0" prefWidth="128.0" promptText="Name" />
+   <TextField fx:id="priceField" layoutX="200.0" layoutY="265.0" prefHeight="25.0" prefWidth="128.0" promptText="Price" />
+   <TextArea fx:id="descriptionField" layoutX="200.0" layoutY="301.0" prefHeight="121.0" prefWidth="191.0" promptText="Descripton" />
+   <TextField fx:id="categoryIdField" layoutX="200.0" layoutY="430.0" prefHeight="25.0" prefWidth="81.0" promptText="Category ID" />
+   <TextField fx:id="stockField" layoutX="200.0" layoutY="462.0" prefHeight="25.0" prefWidth="81.0" promptText="Stock" />
+    <Button layoutX="288.0" layoutY="462.0" onAction="#handleInsert" text="Insert" />
+
+   <Text fill="#ddd6d6" layoutX="200.0" layoutY="229.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert a New Product" />
+   <Text fill="#ddd6d6" layoutX="419.0" layoutY="229.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Updating an Existing Product" wrappingWidth="170.85546875" />
+
+   <TextField fx:id="nameFieldUpdate" layoutX="490.0" layoutY="234.0" prefHeight="25.0" prefWidth="128.0" promptText="Name" />
+    <TextField fx:id="idFieldUpdate" layoutX="419.0" layoutY="234.0" prefHeight="25.0" prefWidth="63.0" promptText="ID" />
+   <TextField fx:id="priceFieldUpdate" layoutX="418.0" layoutY="265.0" prefHeight="25.0" prefWidth="128.0" promptText="Price" />
+   <TextArea fx:id="descriptionFieldUpdate" layoutX="418.0" layoutY="301.0" prefHeight="121.0" prefWidth="191.0" promptText="Descripton" />
+   <TextField fx:id="catIdFieldUpdate" layoutX="419.0" layoutY="430.0" prefHeight="25.0" prefWidth="81.0" promptText="Category ID" />
+   <TextField fx:id="stockFieldUpdate" layoutX="419.0" layoutY="462.0" prefHeight="25.0" prefWidth="81.0" promptText="Stock" />
+    <Button layoutX="504.0" layoutY="462.0" onAction="#handleUpdate" text="Update" />
+
+    <!--Delete Product !-->
+   <Button fx:id="findProductButton1" layoutX="19.0" layoutY="192.0" onAction="#deleteProductById" prefHeight="25.0" prefWidth="111.0" text="Delete Product" />
+   <TextField fx:id="productIdField1" layoutX="130.0" layoutY="192.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
+
+    <!-- Search by keyword !-->
+   <TextField fx:id="keywordField" layoutX="19.0" layoutY="234.0" prefHeight="25.0" prefWidth="140.0" promptText="Search by keyword" />
+    <Button layoutX="157.0" layoutY="234.0" mnemonicParsing="false" onAction="#handleKeywordSearch" prefHeight="25.0" prefWidth="29.0" text="🔍" />
+    <Button layoutX="18.0" layoutY="265.0" mnemonicParsing="false" onAction="#handleDisplayById" prefHeight="25.0" prefWidth="165.0" text="Display By ID" />
+   <Button fx:id="displayAllEntities" layoutX="18.0" layoutY="301.0" onAction="#displayAllEntities" prefHeight="25.0" prefWidth="165.0" text="Display All Entities" />
+    <!--Find products (json) !-->
+    <TextField fx:id="idJsonField" layoutX="19.0" layoutY="345.0" prefHeight="25.0" prefWidth="140.0" promptText="Product ID (JSON)" />
+    <Button layoutX="158.0" layoutY="345.0" onAction="#handleProductIdJson" prefHeight="25.0" prefWidth="24.0" text="🔍" />
+
+
+</AnchorPane>

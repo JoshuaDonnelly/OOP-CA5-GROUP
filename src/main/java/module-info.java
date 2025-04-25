@@ -19,4 +19,7 @@ module org.example.oopca5jfx {
     exports org.example.oopca5jfx.Database;
     exports org.example.oopca5jfx.Utils;
     exports org.example.oopca5jfx.Networking;
+
+    opens org.example.oopca5jfx.Networking to javafx.fxml;
+
 }

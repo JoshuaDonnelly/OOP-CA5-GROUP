@@ -27,6 +27,14 @@
     -fx-border-radius: 5;
     -fx-background-radius: 5;
 }
+.text-area {
+    -fx-control-inner-background: #3c3f41;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #555555;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-prompt-text-fill: #a0a0a0;
+}
 
 .list-view {
     -fx-background-color: #3c3f41;
@@ -34,3 +42,4 @@
     -fx-cell-hover-color: #505354;
     -fx-text-fill: #e0e0e0;
 }
+
