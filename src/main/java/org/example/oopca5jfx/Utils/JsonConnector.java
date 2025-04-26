@@ -16,6 +16,7 @@ public class JsonConnector {
         jsonObject.put("description", product.getDescription());
         jsonObject.put("categoryId", product.getCategoryId());
         jsonObject.put("stock", product.getStock());
+        jsonObject.put("image_filename", product.getImageFilename());
 
         return jsonObject.toString(4); // 4 spaces for pretty-print
     }
@@ -31,11 +32,13 @@ public class JsonConnector {
             productJson.put("description", product.getDescription());
             productJson.put("categoryId", product.getCategoryId());
             productJson.put("stock", product.getStock());
+            productJson.put("image_filename", product.getImageFilename());
             jsonArray.put(productJson);
         }
 
         return jsonArray.toString(4); // 4 spaces for pretty-print
     }
+
     public static productDTO jsonToProduct(String json) {
         JSONObject jsonObject = new JSONObject(json);
         productDTO product = new productDTO();
@@ -45,8 +48,10 @@ public class JsonConnector {
         product.setDescription(jsonObject.getString("description"));
         product.setCategoryId(jsonObject.getInt("categoryId"));
         product.setStock(jsonObject.getInt("stock"));
+        product.setImageFilename(jsonObject.optString("image_filename", null)); // Handle missing image_filename
         return product;
     }
+
     public static List<productDTO> jsonToProductList(String json) {
         List<productDTO> products = new ArrayList<>();
         try {
@@ -60,6 +65,7 @@ public class JsonConnector {
                 product.setDescription(jsonObject.getString("description"));
                 product.setCategoryId(jsonObject.getInt("categoryId"));
                 product.setStock(jsonObject.getInt("stock"));
+                product.setImageFilename(jsonObject.optString("image_filename", null));
                 products.add(product);
             }
         } catch (Exception e) {

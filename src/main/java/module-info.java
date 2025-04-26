@@ -21,5 +21,6 @@ module org.example.oopca5jfx {
     exports org.example.oopca5jfx.Networking;
 
     opens org.example.oopca5jfx.Networking to javafx.fxml;
+    opens org.example.oopca5jfx.DAOs to javafx.fxml;
 
 }

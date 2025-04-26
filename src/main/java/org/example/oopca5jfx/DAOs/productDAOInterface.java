@@ -16,5 +16,8 @@ public interface productDAOInterface {
     String getProductJsonById(int id);
     String getAllProductsJson();
     String getProductsJsonByKeyword(String keyword);
+    String getProductImagePath(int productId);
+    List<String> getProductAdditionalImages(int productId);
+    boolean updateProductImage(int productId, String imageFilename);
 
 }
