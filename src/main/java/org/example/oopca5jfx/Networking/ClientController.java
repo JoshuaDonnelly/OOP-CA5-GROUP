@@ -8,6 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.Socket;
@@ -27,6 +28,9 @@ public class ClientController {
 
     @FXML
     private TextField productIdField1;
+
+    @FXML
+    private TextField productIdField2;
 
     @FXML
     private TextField nameField;
@@ -51,6 +55,19 @@ public class ClientController {
     private TextField catIdFieldUpdate;
     @FXML
     private TextField stockFieldUpdate;
+
+    @FXML
+    private TextField nameFieldAdd;
+    @FXML
+    private TextField idFieldAdd;
+    @FXML
+    private TextField priceFieldAdd;
+    @FXML
+    private TextArea descriptionFieldAdd;
+    @FXML
+    private TextField catIdFieldAdd;
+    @FXML
+    private TextField stockFieldAdd;
 
     @FXML
     private TextField keywordField;
@@ -152,6 +169,76 @@ public class ClientController {
             showError("Invalid input. Please make sure price, category ID and stock are numbers.");
         } catch (IOException e) {
             showError("Error communicating with server.");
+        }
+    }
+
+    @FXML
+    private void handleAdd() {
+        try {
+            String name = nameFieldAdd.getText().trim();
+            float price = Float.parseFloat(priceFieldAdd.getText());
+            String description = descriptionFieldAdd.getText().trim();
+            int categoryId = Integer.parseInt(catIdFieldAdd.getText());
+            int stock = Integer.parseInt(stockFieldAdd.getText());
+
+            // Build the JSON object
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("name", name);
+            jsonObject.put("price", price);
+            jsonObject.put("description", description);
+            jsonObject.put("categoryId", categoryId);
+            jsonObject.put("stock", stock);
+
+            // Send to server
+            socketWriter.println("ADD_PRODUCT " + jsonObject);
+
+            // Receive response
+            String response = socketReader.readLine();
+            System.out.println("Response from server: " + response);
+
+            if (response.startsWith("{")) {
+                JSONObject responseJson = new JSONObject(response);
+                if (responseJson.has("error")) {
+                    showError(responseJson.getString("error"));
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Add Product");
+                    alert.setHeaderText("Product Added Successfully!");
+                    alert.setContentText(responseJson.toString(2));
+                    alert.showAndWait();
+                }
+            } else {
+                showError("Unexpected server response: " + response);
+            }
+
+        } catch (NumberFormatException e) {
+            showError("Invalid input. Please make sure price, category ID and stock are numbers.");
+        } catch (IOException e) {
+            showError("Error communicating with server.");
+        }
+    }
+
+    public void handleDelete() {
+        try {
+            int entityId = Integer.parseInt(productIdField2.getText().trim());
+
+            JSONObject jsonRequest = new JSONObject();
+            jsonRequest.put("id", entityId);
+
+            socketWriter.println("DELETE_ENTITY " + jsonRequest.toString());
+
+            String response = socketReader.readLine();
+            JSONObject jsonResponse = new JSONObject(response);
+
+            // Check if the deletion was successful
+            if ("success".equals(jsonResponse.getString("status"))) {
+                System.out.println("Entity deleted successfully.");
+            } else {
+                String errorMessage = jsonResponse.getString("message");
+                System.out.println("Error: " + errorMessage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

@@ -4,6 +4,7 @@ import org.example.oopca5jfx.DAOs.productDAOInterface;
 import org.example.oopca5jfx.DTOs.productDTO;
 import org.example.oopca5jfx.Database.DatabaseConnection;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -126,6 +127,59 @@ class ClientHandler implements Runnable {
                     ImageDAO imageDao = new ImageDAO();
                     List<String> imageNames = imageDao.getAllImageNames();
                     socketWriter.println(new JSONArray(imageNames).toString());
+                } else if (request.startsWith("ADD_PRODUCT")) {
+                    // Extract the JSON part from the message
+                    String jsonString = request.substring("ADD_PRODUCT".length()).trim();
+
+                    try {
+                        // Parse the JSON string into a JSONObject
+                        JSONObject jsonObject = new JSONObject(jsonString);
+
+                        // Extract the fields from the JSONObject
+                        String name = jsonObject.getString("name");
+                        float price = jsonObject.getFloat("price");
+                        String description = jsonObject.getString("description");
+                        int categoryId = jsonObject.getInt("categoryId");
+                        int stock = jsonObject.getInt("stock");
+                        String imageFileName = jsonObject.getString("imageFileName");
+
+                        // Create a productDAO instance and add the product using the extracted values
+                        productDAO dao = new productDAO();
+                        dao.addProduct(name, price, description, categoryId, stock, imageFileName);
+
+                        // Send a response back to the client
+                        socketWriter.println("Product added successfully!");
+                    } catch (JSONException e) {
+                        socketWriter.println("Error: Invalid JSON format");
+                    }
+                } else if (request.startsWith("DELETE_PRODUCT")) {
+                    String jsonString = request.substring("DELETE_PRODUCT".length()).trim();
+                    productDAO dao = new productDAO();
+
+                    try {
+                        JSONObject jsonRequest = new JSONObject(jsonString);
+                        int productId = jsonRequest.getInt("id");
+
+                        boolean deletionSuccessful = dao.deleteProductByIdJson(productId);
+
+                        JSONObject jsonResponse = new JSONObject();
+
+                        if (deletionSuccessful) {
+                            jsonResponse.put("status", "success");
+                            jsonResponse.put("message", "Product deleted successfully.");
+                        } else {
+                            jsonResponse.put("status", "error");
+                            jsonResponse.put("message", "Product with ID " + productId + " not found.");
+                        }
+
+                        socketWriter.println(jsonResponse.toString());
+
+                    } catch (Exception e) {
+                        JSONObject errorResponse = new JSONObject();
+                        errorResponse.put("status", "error");
+                        errorResponse.put("message", "Failed to process the request.");
+                        socketWriter.println(errorResponse.toString());
+                    }
                 } else if (request.startsWith("GET_IMAGE")) {
                     String imageName = request.substring(9);
                     ImageDAO imageDao = new ImageDAO();
@@ -319,6 +373,78 @@ class productDAO implements productDAOInterface {
             return false;
         }
     }
+
+    public String addProduct(String name, float price, String description, int categoryId, int stock, String imageFilename) {
+        // Check if any of the fields are null or empty
+        if (name == null || name.isEmpty() || description == null || description.isEmpty() || imageFilename == null || imageFilename.isEmpty()) {
+            JSONObject errorResponse = new JSONObject();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", "Invalid input. All fields must be provided.");
+            return errorResponse.toString();
+        }
+
+        try {
+            productDTO p = new productDTO(0, name, price, description, categoryId, stock, imageFilename);
+
+            String sql = "INSERT INTO products (name, price, description, category_id, stock, image_filename) VALUES (?, ?, ?, ?, ?, ?)";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, p.getName());
+                pstmt.setFloat(2, p.getPrice());
+                pstmt.setString(3, p.getDescription());
+                pstmt.setInt(4, p.getCategoryId());
+                pstmt.setInt(5, p.getStock());
+                pstmt.setString(6, p.getImageFilename());
+
+                int affectedRows = pstmt.executeUpdate();
+                if (affectedRows > 0) {
+                    ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        p.setId(generatedKeys.getInt(1));
+
+                        // Return success response with the new product details
+                        JSONObject successResponse = new JSONObject();
+                        successResponse.put("status", "success");
+                        successResponse.put("id", p.getId());
+                        successResponse.put("name", p.getName());
+                        successResponse.put("price", p.getPrice());
+                        successResponse.put("description", p.getDescription());
+                        successResponse.put("categoryId", p.getCategoryId());
+                        successResponse.put("stock", p.getStock());
+                        successResponse.put("imageFilename", p.getImageFilename());
+
+                        return successResponse.toString();
+                    }
+                }
+            }
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+            // Return error if an exception occurs
+            JSONObject errorResponse = new JSONObject();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", "Database error occurred.");
+            return errorResponse.toString();
+        }
+
+        // If no rows were affected or an error occurred, return an error message
+        JSONObject errorResponse = new JSONObject();
+        errorResponse.put("status", "error");
+        errorResponse.put("message", "Failed to add product.");
+        return errorResponse.toString();
+    }
+
+    public boolean deleteProductByIdJson(int productId) {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, productId);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     @Override
     public List<productDTO> searchProductsByKeyword(String keyword) {
