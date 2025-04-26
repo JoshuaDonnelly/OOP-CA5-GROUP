@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Text?>
 
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.control.ScrollPane?>
 <AnchorPane prefHeight="700" prefWidth="900" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.oopca5jfx.Networking.ClientController">
 
     <Button fx:id="connectButton" layoutX="51.0" layoutY="50.0" onAction="#connectToServer" prefHeight="25.0" prefWidth="119.0" text="Connect to Server" />
@@ -17,7 +16,7 @@
 
     <!-- Find by id !-->
     <TextField fx:id="productIdToFind" layoutX="130.0" layoutY="143.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
-    <Button fx:id="findProductButton" layoutX="23.0" layoutY="143.0" onAction="#findProductById" prefHeight="25.0" prefWidth="111.0" text="Find Product" />
+    <Button fx:id="findProductButton" layoutX="19.0" layoutY="143.0" onAction="#findProductById" prefHeight="25.0" prefWidth="111.0" text="Find Product" />
 
     <!--Insert or update a product !-->
     <TextArea fx:id="outputArea" editable="false" layoutX="200" layoutY="50" prefHeight="165.0" prefWidth="650" />
@@ -54,9 +53,18 @@
     <Button layoutX="158.0" layoutY="345.0" onAction="#handleProductIdJson" prefHeight="25.0" prefWidth="24.0" text="🔍" />
 
     <!--Images section - positioned below JSON search -->
-    <Button layoutX="19.0" layoutY="380.0" text="Get Image List" onAction="#handleGetImageNames" prefHeight="25.0" prefWidth="165.0"/>
-    <ListView fx:id="imageListView" layoutX="19.0" layoutY="415.0" prefHeight="100.0" prefWidth="165.0"/>
-    <Button layoutX="19.0" layoutY="525.0" text="Download Selected Image" onAction="#handleDownloadImage" prefHeight="25.0" prefWidth="165.0" />
-    <ImageView fx:id="imageView" layoutX="200.0" layoutY="380.0" fitWidth="300" fitHeight="300" preserveRatio="true" />
+    <Button layoutX="19.0" layoutY="380.0" onAction="#handleGetImageNames" prefHeight="25.0" prefWidth="165.0" text="Get Image List" />
+    <ListView fx:id="imageListView" layoutX="19.0" layoutY="415.0" prefHeight="100.0" prefWidth="165.0" />
+    <Button layoutX="19.0" layoutY="525.0" onAction="#handleDownloadImage" prefHeight="25.0" prefWidth="165.0" text="Download Selected Image" />
+    <ImageView fx:id="imageView" fitHeight="300" fitWidth="300" layoutX="200.0" layoutY="375.0" preserveRatio="true" />
+   <Text fill="#ddd6d6" layoutX="637.0" layoutY="229.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Add a New Product" wrappingWidth="170.85546875" />
+   <TextField fx:id="nameFieldAdd" layoutX="637.0" layoutY="234.0" prefHeight="25.0" prefWidth="128.0" promptText="Name" />
+   <TextField fx:id="priceFieldAdd" layoutX="637.0" layoutY="265.0" prefHeight="25.0" prefWidth="128.0" promptText="Price" />
+   <TextArea fx:id="descriptionFieldAdd" layoutX="637.0" layoutY="301.0" prefHeight="121.0" prefWidth="191.0" promptText="Descripton" />
+   <TextField fx:id="categoryIdFieldAdd" layoutX="637.0" layoutY="430.0" prefHeight="25.0" prefWidth="81.0" promptText="Category ID" />
+   <TextField fx:id="stockFieldAdd" layoutX="637.0" layoutY="462.0" prefHeight="25.0" prefWidth="81.0" promptText="Stock" />
+   <Button layoutX="722.0" layoutY="462.0" onAction="#handleAdd" text="Add" />
+   <Button fx:id="findProductButton2" layoutX="19.0" layoutY="562.0" onAction="#deleteProductByIdJson" prefHeight="25.0" prefWidth="165.0" text="Delete Product Json" />
+   <TextField fx:id="productIdField2" layoutX="186.0" layoutY="562.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
 
 </AnchorPane>
