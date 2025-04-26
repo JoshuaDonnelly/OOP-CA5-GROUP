@@ -65,6 +65,6 @@
    <TextField fx:id="stockFieldAdd" layoutX="637.0" layoutY="462.0" prefHeight="25.0" prefWidth="81.0" promptText="Stock" />
    <Button layoutX="722.0" layoutY="462.0" onAction="#handleAdd" text="Add" />
    <Button fx:id="findProductButton2" layoutX="19.0" layoutY="562.0" onAction="#handleDelete" prefHeight="25.0" prefWidth="165.0" text="Delete Product Json" />
-   <TextField fx:id="productIdField2" layoutX="186.0" layoutY="562.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
+   <TextField fx:id="productIdField2" layoutX="182.0" layoutY="562.0" prefHeight="25.0" prefWidth="63.0" promptText="Enter ID" />
 
 </AnchorPane>

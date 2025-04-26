@@ -8,8 +8,16 @@ import javafx.stage.Stage;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.net.Socket;
 
 public class ClientApp extends Application {
+
+    // Define the server address and port
+    private static final String SERVER_ADDRESS = "localhost"; // Replace with actual server address
+    private static final int SERVER_PORT = 12345; // Replace with actual server port
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -23,34 +31,66 @@ public class ClientApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // Receive the response from the server
+        // Connect to the server and initialize socketReader
         BufferedReader socketReader = null;
-        String response = socketReader.readLine();
-        JSONObject jsonResponse = new JSONObject(response);
+        Socket socket = null;
 
-        if ("success".equals(jsonResponse.getString("status"))) {
-            // Display the new product details with the auto-generated ID
-            int id = jsonResponse.getInt("id");
-            String name = jsonResponse.getString("name");
-            float price = jsonResponse.getFloat("price");
-            String description = jsonResponse.getString("description");
-            int categoryId = jsonResponse.getInt("categoryId");
-            int stock = jsonResponse.getInt("stock");
-            String imageFilename = jsonResponse.getString("imageFilename");
+        try {
+            // Establish the connection to the server
+            socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
 
-            // Display the product information
-            System.out.println("Product added successfully! ID: " + id);
-            System.out.println("Name: " + name);
-            System.out.println("Price: " + price);
-            System.out.println("Description: " + description);
-            System.out.println("Category ID: " + categoryId);
-            System.out.println("Stock: " + stock);
-            System.out.println("Image Filename: " + imageFilename);
-        } else {
-            String errorMessage = jsonResponse.getString("message");
-            System.out.println("Error: " + errorMessage);
+            // Create BufferedReader to read from the socket
+            socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
+            // Read the response from the server
+            String response = socketReader.readLine();
+
+            // Process the response as JSON
+            JSONObject jsonResponse = new JSONObject(response);
+
+            if ("success".equals(jsonResponse.getString("status"))) {
+                // Display the new product details with the auto-generated ID
+                int id = jsonResponse.getInt("id");
+                String name = jsonResponse.getString("name");
+                float price = jsonResponse.getFloat("price");
+                String description = jsonResponse.getString("description");
+                int categoryId = jsonResponse.getInt("categoryId");
+                int stock = jsonResponse.getInt("stock");
+                String imageFilename = jsonResponse.getString("imageFilename");
+
+                // Display the product information
+                System.out.println("Product added successfully! ID: " + id);
+                System.out.println("Name: " + name);
+                System.out.println("Price: " + price);
+                System.out.println("Description: " + description);
+                System.out.println("Category ID: " + categoryId);
+                System.out.println("Stock: " + stock);
+                System.out.println("Image Filename: " + imageFilename);
+            } else {
+                String errorMessage = jsonResponse.getString("message");
+                System.out.println("Error: " + errorMessage);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Error connecting to the server: " + e.getMessage());
+        } finally {
+            // Close resources
+            if (socketReader != null) {
+                try {
+                    socketReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-
     }
 }
+
