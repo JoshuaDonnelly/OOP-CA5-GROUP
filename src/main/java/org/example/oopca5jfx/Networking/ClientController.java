@@ -190,7 +190,7 @@ public class ClientController {
             jsonObject.put("stock", stock);
 
             // Send to server
-            socketWriter.println("ADD_PRODUCT " + jsonObject);
+            socketWriter.println("ADD_PRODUCT " + jsonObject.toString());
 
             // Receive response
             String response = socketReader.readLine();
