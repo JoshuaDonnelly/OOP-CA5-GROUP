@@ -61,7 +61,7 @@
    <TextField fx:id="nameFieldAdd" layoutX="637.0" layoutY="234.0" prefHeight="25.0" prefWidth="128.0" promptText="Name" />
    <TextField fx:id="priceFieldAdd" layoutX="637.0" layoutY="265.0" prefHeight="25.0" prefWidth="128.0" promptText="Price" />
    <TextArea fx:id="descriptionFieldAdd" layoutX="637.0" layoutY="301.0" prefHeight="121.0" prefWidth="191.0" promptText="Descripton" />
-   <TextField fx:id="categoryIdFieldAdd" layoutX="637.0" layoutY="430.0" prefHeight="25.0" prefWidth="81.0" promptText="Category ID" />
+   <TextField fx:id="catIdFieldAdd" layoutX="637.0" layoutY="430.0" prefHeight="25.0" prefWidth="81.0" promptText="Category ID" />
    <TextField fx:id="stockFieldAdd" layoutX="637.0" layoutY="462.0" prefHeight="25.0" prefWidth="81.0" promptText="Stock" />
    <Button layoutX="722.0" layoutY="462.0" onAction="#handleAdd" text="Add" />
    <Button fx:id="findProductButton2" layoutX="19.0" layoutY="562.0" onAction="#handleDelete" prefHeight="25.0" prefWidth="165.0" text="Delete Product Json" />
