@@ -96,7 +96,30 @@ class ClientHandler implements Runnable {
                     String id = request.substring(10);
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getProductJsonById(Integer.parseInt(id)));
-                } else if (request.startsWith("view")) {
+                }else if (request.startsWith("GET_IMAGE")) {
+                    String imageName = request.substring(9).trim();
+                    ImageDAO imageDao = new ImageDAO();
+                    byte[] imageData = imageDao.getImageData(imageName);
+
+                    if (imageData != null) {
+                        try {
+                            // Send image size first
+                            socketWriter.println("IMAGE_SIZE:" + imageData.length);
+                            socketWriter.flush();  // Ensure size is sent immediately
+
+                            // Get raw output stream and send binary data
+                            OutputStream outputStream = clientSocket.getOutputStream();
+                            outputStream.write(imageData);
+                            outputStream.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            socketWriter.println("ERROR: Failed to send image data");
+                        }
+                    } else {
+                        socketWriter.println("ERROR: Image not found");
+                    }
+                }
+                else if (request.startsWith("view")) {
                     productDAO dao = new productDAO();
                     socketWriter.println(dao.getAllProducts());
                 } else if (request.startsWith("find")) {
@@ -141,9 +164,8 @@ class ClientHandler implements Runnable {
                         String description = jsonObject.getString("description");
                         int categoryId = jsonObject.getInt("categoryId");
                         int stock = jsonObject.getInt("stock");
-                        String imageFileName = jsonObject.getString("imageFileName");
+                        String imageFileName = jsonObject.optString("imageFilename", null); // Returns null if the field is empty
 
-                        // Create a productDAO instance and add the product using the extracted values
                         productDAO dao = new productDAO();
                         dao.addProduct(name, price, description, categoryId, stock, imageFileName);
 
@@ -180,20 +202,7 @@ class ClientHandler implements Runnable {
                         errorResponse.put("message", "Failed to process the request.");
                         socketWriter.println(errorResponse.toString());
                     }
-                } else if (request.startsWith("GET_IMAGE")) {
-                    String imageName = request.substring(9);
-                    ImageDAO imageDao = new ImageDAO();
-                    byte[] imageData = imageDao.getImageData(imageName);
 
-                    if (imageData != null) {
-                        socketWriter.println("IMAGE_DATA_START");
-                        OutputStream outputStream = clientSocket.getOutputStream();
-                        outputStream.write(imageData);
-                        outputStream.flush();
-                        socketWriter.println("IMAGE_DATA_END");
-                    } else {
-                        socketWriter.println("ERROR: Image not found");
-                    }
                 } else {
                     socketWriter.println("error I'm sorry I don't understand your request");
                     System.out.println("Server message: Invalid request from client.");
@@ -296,10 +305,10 @@ class productDAO implements productDAOInterface {
 
     @Override
     public productDTO insertProduct(String pString) {
-        String[] pSplit = pString.split(" ", 6); // 6 parts, not 5
+        String[] pSplit = pString.split(" ", 5); // 6 parts, not 5 // Actually 5 parts not 6, imageFilename will be null
 
-        if (pSplit.length < 6) {
-            System.out.println("Invalid input format. Expected: name price description categoryId stock imageFilename");
+        if (pSplit.length < 5) {
+            System.out.println("Invalid input format. Expected: name price description categoryId stock");
             return null;
         }
 
@@ -309,7 +318,7 @@ class productDAO implements productDAOInterface {
             String description = pSplit[2];
             int categoryId = Integer.parseInt(pSplit[3]);
             int stock = Integer.parseInt(pSplit[4]);
-            String imageFilename = pSplit[5];
+            String imageFilename = null;
 
             productDTO p = new productDTO(0, name, price, description, categoryId, stock, imageFilename);
 
@@ -339,10 +348,10 @@ class productDAO implements productDAOInterface {
 
     @Override
     public boolean updateProduct(String pString) {
-        String[] pSplit = pString.split("\\|", 7); // now expecting 7 fields
+        String[] pSplit = pString.split("\\|", 7); // now expecting 7 fields // again 6, imageFilename will be added elsewhere
 
-        if (pSplit.length < 7) {
-            System.out.println("Invalid input format. Expected: id|name|price|description|categoryId|stock|imageFilename");
+        if (pSplit.length < 6) {
+            System.out.println("Invalid input format. Expected: id|name|price|description|categoryId|stock");
             return false;
         }
 
@@ -353,7 +362,7 @@ class productDAO implements productDAOInterface {
             String description = pSplit[3];
             int categoryId = Integer.parseInt(pSplit[4]);
             int stock = Integer.parseInt(pSplit[5]);
-            String imageFilename = pSplit[6];
+            String imageFilename = null;
 
             String sql = "UPDATE products SET name = ?, price = ?, description = ?, category_id = ?, stock = ?, image_filename = ? WHERE id = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -376,7 +385,7 @@ class productDAO implements productDAOInterface {
 
     public String addProduct(String name, float price, String description, int categoryId, int stock, String imageFilename) {
         // Check if any of the fields are null or empty
-        if (name == null || name.isEmpty() || description == null || description.isEmpty() || imageFilename == null || imageFilename.isEmpty()) {
+        if (name == null || name.isEmpty() || description == null || description.isEmpty()) {
             JSONObject errorResponse = new JSONObject();
             errorResponse.put("status", "error");
             errorResponse.put("message", "Invalid input. All fields must be provided.");

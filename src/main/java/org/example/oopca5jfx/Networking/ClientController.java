@@ -81,15 +81,15 @@ public class ClientController {
     @FXML
     private void connectToServer() {
         try {
-            Socket socket = new Socket("localhost", SERVER_PORT_NUMBER);
-            socketWriter = new PrintWriter(socket.getOutputStream(), true);
-            socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             clientSocket = new Socket("localhost", SERVER_PORT_NUMBER);
+            socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+            socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             outputArea.appendText("Connected to server.\n");
         } catch (IOException e) {
             outputArea.appendText("Connection error: " + e.getMessage() + "\n");
         }
     }
+
 
     @FXML
     private void viewProducts() {
@@ -180,6 +180,7 @@ public class ClientController {
             String description = descriptionFieldAdd.getText().trim();
             int categoryId = Integer.parseInt(catIdFieldAdd.getText());
             int stock = Integer.parseInt(stockFieldAdd.getText());
+            String imageFilename = "";
 
             // Build the JSON object
             JSONObject jsonObject = new JSONObject();
@@ -188,6 +189,7 @@ public class ClientController {
             jsonObject.put("description", description);
             jsonObject.put("categoryId", categoryId);
             jsonObject.put("stock", stock);
+            jsonObject.put("imageFilename", imageFilename);
 
             // Send to server
             socketWriter.println("ADD_PRODUCT " + jsonObject.toString());
@@ -225,14 +227,14 @@ public class ClientController {
             JSONObject jsonRequest = new JSONObject();
             jsonRequest.put("id", entityId);
 
-            socketWriter.println("DELETE_ENTITY " + jsonRequest.toString());
+            socketWriter.println("DELETE_PRODUCT " + jsonRequest.toString());
 
             String response = socketReader.readLine();
             JSONObject jsonResponse = new JSONObject(response);
 
             // Check if the deletion was successful
             if ("success".equals(jsonResponse.getString("status"))) {
-                System.out.println("Entity deleted successfully.");
+                System.out.println("Product deleted successfully.");
             } else {
                 String errorMessage = jsonResponse.getString("message");
                 System.out.println("Error: " + errorMessage);
@@ -275,57 +277,59 @@ public class ClientController {
 
     private void downloadImage(String imageName) {
         try {
+            // Send request for the image
             socketWriter.println("GET_IMAGE " + imageName);
 
-            String response = socketReader.readLine();
+            // First read the image size from server
+            String sizeResponse = socketReader.readLine();
+            if (!sizeResponse.startsWith("IMAGE_SIZE:")) {
+                outputArea.appendText("Invalid server response: " + sizeResponse + "\n");
+                return;
+            }
 
-            if (response.equals("IMAGE_DATA_START")) {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Save Image");
-                fileChooser.setInitialFileName(imageName);
-                File file = fileChooser.showSaveDialog(outputArea.getScene().getWindow());
+            long imageSize = Long.parseLong(sizeResponse.substring(11));
 
-                if (file != null) {
-                    InputStream inputStream = clientSocket.getInputStream();
+            // Create file chooser
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Image");
+            fileChooser.setInitialFileName(imageName);
+            File file = fileChooser.showSaveDialog(imageView.getScene().getWindow());
 
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    byte[] data = new byte[4096];
-                    int bytesRead;
+            if (file != null) {
+                // Get the socket's raw input stream
+                InputStream inputStream = clientSocket.getInputStream();
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
 
-                    while ((bytesRead = inputStream.read(data, 0, data.length)) != -1) {
-                        buffer.write(data, 0, bytesRead);
+                // Read the image data in chunks
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                long totalBytesRead = 0;
 
-                        String content = buffer.toString("UTF-8");
-                        if (content.contains("IMAGE_DATA_END")) {
-                            break;
-                        }
-                    }
-
-                    byte[] imageBytes = buffer.toByteArray();
-                    String imageString = new String(imageBytes, "UTF-8");
-                    int endIndex = imageString.indexOf("IMAGE_DATA_END");
-                    if (endIndex != -1) {
-                        imageBytes = imageString.substring(0, endIndex).getBytes("UTF-8");
-                    }
-
-                    Files.write(file.toPath(), imageBytes);
-
-                    outputArea.appendText("Image downloaded successfully: " + file.getAbsolutePath() + "\n");
-
-                    displayImage(imageBytes);
+                while (totalBytesRead < imageSize) {
+                    bytesRead = inputStream.read(buffer, 0,
+                            (int) Math.min(buffer.length, imageSize - totalBytesRead));
+                    if (bytesRead == -1) break;
+                    fileOutputStream.write(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
                 }
-            } else {
-                outputArea.appendText("Server response: " + response + "\n");
+
+                fileOutputStream.close();
+                outputArea.appendText("Image downloaded successfully: " + file.getAbsolutePath() + "\n");
+
+                // Display the image
+                displayImage(file);
             }
         } catch (IOException e) {
             outputArea.appendText("Error downloading image: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            outputArea.appendText("Error parsing image size from server\n");
         }
     }
 
-    private void displayImage(byte[] imageData) {
+    private void displayImage(File imageFile) {
         try {
-            ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
-            Image image = new Image(bis);
+            Image image = new Image(imageFile.toURI().toString());
             imageView.setImage(image);
         } catch (Exception e) {
             outputArea.appendText("Error displaying image: " + e.getMessage() + "\n");
@@ -358,46 +362,7 @@ public class ClientController {
             socketWriter.println(command);
             try {
                 String response = socketReader.readLine();
-
-                if (command.equals("GET_IMAGE_NAMES")) {
-                    JSONArray jsonArray = new JSONArray(response);
-                    ObservableList<String> imageNames = FXCollections.observableArrayList();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        imageNames.add(jsonArray.getString(i));
-                    }
-                    imageListView.setItems(imageNames);
-
-                    // ⭐ NEW: Set custom cell factory to show thumbnails
-                    imageListView.setCellFactory(param -> new ListCell<String>() {
-                        private final ImageView imageView = new ImageView();
-                        @Override
-                        protected void updateItem(String imageName, boolean empty) {
-                            super.updateItem(imageName, empty);
-                            if (empty || imageName == null) {
-                                setGraphic(null);
-                            } else {
-                                try {
-                                    File imageFile = new File("images/" + imageName); // assumes local /images/ folder
-                                    if (imageFile.exists()) {
-                                        Image image = new Image(imageFile.toURI().toString(), 100, 100, true, true);
-                                        imageView.setImage(image);
-                                        setGraphic(imageView);
-                                    } else {
-                                        setText("Missing: " + imageName);
-                                        setGraphic(null);
-                                    }
-                                } catch (Exception e) {
-                                    setText("Error: " + e.getMessage());
-                                    setGraphic(null);
-                                }
-                            }
-                        }
-                    });
-
-                    outputArea.appendText("Received " + imageNames.size() + " image names\n");
-                } else {
-                    outputArea.appendText("Server response: \n" + response + "\n");
-                }
+                outputArea.appendText("Server response: \n" + response + "\n");
             } catch (IOException e) {
                 outputArea.appendText("Read error: " + e.getMessage() + "\n");
             }
